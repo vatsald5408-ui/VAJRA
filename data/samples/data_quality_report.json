@@ -1,0 +1,49 @@
+{
+  "generated_at": "2026-09-26T15:44:23.412311+00:00",
+  "data_mode": "DEMO",
+  "region": "DELHI_NCR",
+  "total_samples": 5474,
+  "feature_columns": 54,
+  "label_columns": 12,
+  "missing_features_pct": {
+    "refl_max": 0.0,
+    "refl_mean": 0.0,
+    "refl_median": 0.0,
+    "refl_above_20dbz": 0.0,
+    "refl_above_35dbz": 0.0,
+    "refl_above_40dbz": 0.0,
+    "refl_above_45dbz": 0.0,
+    "refl_above_50dbz": 0.0,
+    "storm_cell_area_fraction": 0.0,
+    "storm_centroid_i": 0.0,
+    "storm_centroid_j": 0.0,
+    "spectrum_width_mean": 0.0,
+    "refl_change_10min": 0.0,
+    "refl_change_30min": 0.0,
+    "storm_area_change_30min": 0.0,
+    "centroid_displacement_cells_30min": 0.0,
+    "refl_rolling_max": 0.0,
+    "refl_rolling_mean": 0.0,
+    "refl_rolling_std": 0.0,
+    "ir_bt_mean": 0.0
+  },
+  "label_positive_rates": {
+    "target_thunderstorm_15m": 0.0453,
+    "target_thunderstorm_30m": 0.0579,
+    "target_thunderstorm_60m": 0.0583,
+    "target_thunderstorm_120m": 0.0583,
+    "target_thunderstorm_180m": 0.0583,
+    "target_thunderstorm_360m": 0.0,
+    "target_lightning_15m": 0.0499,
+    "target_lightning_30m": 0.0649,
+    "target_lightning_60m": 0.0784,
+    "target_lightning_120m": 0.0784,
+    "target_lightning_180m": 0.0643,
+    "target_lightning_360m": 0.0
+  },
+  "timestamp_range": {
+    "min": "2023-07-01T00:00:00+00:00",
+    "max": "2023-07-01T03:00:00+00:00"
+  },
+  "note": "DEMO/SYNTHETIC DATA - values are not real observations. Positive rates are plausibility-checked, not validated."
+}

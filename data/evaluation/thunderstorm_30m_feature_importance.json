@@ -1,0 +1,16 @@
+{
+  "model": "RandomForest_thunderstorm_30m",
+  "note": "Feature importances from trained RF. Values are impurity-based importances.",
+  "top_10": {
+    "cloud_top_cooling_rate_30min": 0.06164799215605252,
+    "bt_change_30min": 0.06018251536843997,
+    "refl_change_30min": 0.05886860890127168,
+    "ir_bt_min": 0.04651744588757961,
+    "refl_mean": 0.04472975140529428,
+    "vis_mean": 0.04284504871138631,
+    "refl_max": 0.042188932360732005,
+    "refl_median": 0.04091085478798745,
+    "refl_change_10min": 0.03579119778670103,
+    "ir_bt_mean": 0.03479068280554744
+  }
+}

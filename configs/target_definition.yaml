@@ -1,0 +1,77 @@
+# ============================================================
+# Target / Ground Truth Definition
+# ============================================================
+# SCIENTIFIC HONESTY: Every threshold used here must be
+# documented with a rationale and its limitations.
+# These are PROTOTYPE ASSUMPTIONS and should be validated
+# against authoritative IMD event classifications.
+# ============================================================
+
+targets:
+
+  lightning:
+    name: "Lightning occurrence"
+    definition: >
+      Binary label: 1 if one or more valid lightning observations
+      (from lightning network or synthetic data) occur within
+      the grid cell or within the spatial_tolerance_km of the cell
+      center during the target time window [T+horizon ± temporal_tolerance_min].
+      0 otherwise.
+    spatial_tolerance_km: 5.0
+    temporal_tolerance_min: 15
+    minimum_confidence: 0.5       # minimum quality/confidence score if available
+    source_priority:
+      - "IMD_LIGHTNING_API"
+      - "SYNTHETIC_LIGHTNING"
+    scientific_rationale: >
+      Lightning network data provides direct observation of
+      cloud-to-ground (CG) and intracloud (IC) lightning.
+      A spatial tolerance accounts for positional uncertainty
+      in lightning location estimates (typically 1-5 km for
+      modern networks). Temporal tolerance accounts for the
+      discrete nature of forecast horizons.
+    limitations: >
+      - Does not distinguish CG vs IC lightning by default
+      - Spatial tolerance introduces some label uncertainty
+      - Lightning detection efficiency varies by network quality
+      - No lightning ≠ no thunderstorm (can have dry thunderstorms)
+
+  thunderstorm:
+    name: "Thunderstorm / convective event occurrence"
+    definition: >
+      Binary label: 1 if the maximum composite radar reflectivity
+      within the grid cell or within spatial_tolerance_km exceeds
+      reflectivity_threshold_dbz during the target time window.
+      0 otherwise.
+    reflectivity_threshold_dbz: 40
+    spatial_tolerance_km: 10.0
+    temporal_tolerance_min: 15
+    source_priority:
+      - "IMD_RADAR"
+      - "SYNTHETIC_RADAR"
+    scientific_rationale: >
+      40 dBZ is a commonly used threshold in nowcasting literature
+      to identify moderate-to-severe convection. References:
+      - Dixon & Wiener (1993): TITAN storm tracking system uses ~35-45 dBZ
+      - Lakshmanan et al. (2003): convective cell identification
+      - WMO WWRP Nowcasting guidelines (2004)
+      The threshold choice is a PROTOTYPE ASSUMPTION and should
+      be tuned against authoritative IMD severe weather reports.
+    limitations: >
+      - 40 dBZ threshold is a prototype assumption, not an IMD standard
+      - Radar coverage is not uniform across India
+      - High reflectivity can occasionally be non-convective (e.g., hail)
+      - This is a radar-proxy label, not an official IMD thunderstorm label
+      - If official IMD thunderstorm reports are available, prefer those
+
+  alternative_thunderstorm_imd:
+    name: "IMD Official Thunderstorm Report (preferred if available)"
+    definition: >
+      If IMD provides historical thunder/severe-weather event reports,
+      use those as ground truth instead of the radar-derived proxy above.
+      This adapter is a placeholder; actual schema will depend on
+      IMD data format when made available.
+    access_status: RESTRICTED
+    notes: >
+      IMD District-level weather event reports and station observations
+      may be available via IMD data services.

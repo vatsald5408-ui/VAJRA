@@ -1,0 +1,16 @@
+{
+  "model": "RandomForest_lightning_180m",
+  "note": "Feature importances from trained RF. Values are impurity-based importances.",
+  "top_10": {
+    "vis_mean": 0.08587524268222749,
+    "ir_bt_rolling_mean": 0.05333880051380857,
+    "refl_rolling_mean": 0.050178143844558126,
+    "dist_nearest_strike_km": 0.04366898347864582,
+    "refl_rolling_max": 0.03863764629763727,
+    "ir_bt_rolling_min": 0.033895264495007536,
+    "spectrum_width_mean": 0.033171748792930264,
+    "refl_rolling_std": 0.032274076702695914,
+    "tcc": 0.03180975539454586,
+    "blh_m": 0.030333453735521914
+  }
+}

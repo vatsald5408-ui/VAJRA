@@ -1,0 +1,16 @@
+{
+  "model": "RandomForest_thunderstorm_120m",
+  "note": "Feature importances from trained RF. Values are impurity-based importances.",
+  "top_10": {
+    "vis_mean": 0.07849951906127448,
+    "refl_rolling_mean": 0.049868432469474484,
+    "ir_bt_rolling_mean": 0.04668534611052603,
+    "ir_bt_rolling_min": 0.04067281009080897,
+    "dist_nearest_strike_km": 0.040140577215679644,
+    "bt_change_60min": 0.037448459446853724,
+    "refl_rolling_max": 0.036916012686283084,
+    "spectrum_width_mean": 0.034590633660619596,
+    "ir_bt_rolling_std": 0.03422337402051623,
+    "tp_m": 0.03405034361457793
+  }
+}

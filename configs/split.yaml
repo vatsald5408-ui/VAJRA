@@ -1,0 +1,41 @@
+# ============================================================
+# Train / Validation / Test Split Configuration
+# ============================================================
+# IMPORTANT: Do NOT randomly split individual rows.
+# Weather samples from the same storm are highly correlated.
+# Split MUST be temporal (by date) or event-based.
+#
+# The test set must remain UNTOUCHED until final evaluation.
+# ============================================================
+
+split_strategy: temporal   # options: temporal, event_based
+
+temporal:
+  train:
+    start: "2020-06-01"
+    end:   "2022-09-30"
+    description: "Pre-monsoon and monsoon seasons 2020-2022"
+
+  validation:
+    start: "2023-06-01"
+    end:   "2023-09-30"
+    description: "Monsoon season 2023 - used for hyperparameter tuning"
+
+  test:
+    start: "2024-06-01"
+    end:   "2024-09-30"
+    description: "Monsoon season 2024 - HELD OUT, evaluated once"
+    held_out: true    # never touch until final evaluation
+
+# Minimum gap between train and validation (prevents leakage
+# from storm events near split boundary)
+temporal_gap_days: 30
+
+# Pre-monsoon and monsoon months for India (typical severe weather)
+target_months: [4, 5, 6, 7, 8, 9, 10]  # April-October
+
+notes: >
+  For prototype/DEMO mode, synthetic data is generated to cover
+  these date ranges with realistic seasonal variability.
+  When real data is available, actual timestamps from those
+  periods are used.

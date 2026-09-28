@@ -1,0 +1,86 @@
+# ============================================================
+# Feature Engineering Configuration
+# ============================================================
+
+# Temporal context window (minutes before T0 to include)
+input_window_minutes: 60
+
+# Time steps to include (relative to T0, in minutes)
+# Negative = past, 0 = T0
+input_timesteps: [-60, -45, -30, -15, 0]
+
+# Reflectivity thresholds (dBZ) for area/cell calculations
+# These are common WMO/meteorological thresholds used in research.
+# ASSUMPTION: 35 dBZ ~ moderate convection, 40 dBZ ~ heavy rain,
+# 45 dBZ ~ severe convection (documented assumption, not absolute threshold)
+reflectivity_thresholds_dbz: [20, 35, 40, 45, 50]
+
+# Brightness temperature threshold for deep convection (Kelvin)
+# ASSUMPTION: TIR < 235K often associated with cold cloud tops / convection
+# Based on: Mapes & Houze (1993), Cecil & Zipser (2002)
+brightness_temp_convection_threshold_k: 235
+
+radar:
+  max_reflectivity: true
+  mean_reflectivity: true
+  median_reflectivity: true
+  area_above_thresholds: true     # for each threshold in reflectivity_thresholds_dbz
+  storm_cell_area: true
+  storm_centroid_lat: true
+  storm_centroid_lon: true
+  spectrum_width_mean: true
+  ZDR_mean: true                  # only if available
+  KDP_mean: true                  # only if available
+  rhoHV_mean: true                # only if available
+  reflectivity_change_10min: true
+  reflectivity_change_30min: true
+  storm_area_change_30min: true
+  centroid_displacement_km: true
+
+satellite:
+  ir_brightness_temp_mean: true
+  ir_brightness_temp_min: true
+  wv_brightness_temp_mean: true
+  cloud_top_temp_mean: true
+  visible_mean: true              # only if available (daytime)
+  cloud_top_cooling_rate_30min: true
+  cloud_area_growth_rate: true
+  bt_change_30min: true
+
+lightning:
+  strike_count_5min: true
+  strike_count_10min: true
+  strike_count_15min: true
+  strike_count_30min: true
+  strike_count_60min: true
+  flash_count_15min: true
+  lightning_density_15min: true
+  flash_rate_per_min: true
+  lightning_trend_slope: true     # linear slope over last 60 min
+
+nwp:
+  temperature_2m: true
+  dewpoint_2m: true
+  relative_humidity: true
+  surface_pressure: true
+  wind_speed_10m: true
+  wind_direction_10m: true
+  u_wind_10m: true
+  v_wind_10m: true
+  vertical_wind_shear: true       # 850-500 hPa shear magnitude
+  CAPE: true                      # only if available in NWP source
+  CIN: true                       # only if available in NWP source
+  total_precipitation: true
+  total_cloud_cover: true
+  boundary_layer_height: true
+
+temporal:
+  # For these primary variables, compute rolling statistics
+  variables:
+    - reflectivity_max
+    - ir_brightness_temp_min
+    - lightning_density_15min
+    - CAPE
+    - wind_speed_10m
+  window_minutes: [10, 30, 60]
+  statistics: [mean, max, min, std, slope]

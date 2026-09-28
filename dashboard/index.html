@@ -1,0 +1,1461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>India Thunderstorm & Lightning Nowcasting Dashboard</title>
+  <meta name="description" content="AI/ML based nowcasting of thunderstorm and lightning occurrence over India. Research prototype — DEMO mode." />
+
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --bg-primary: #0a0e1a;
+      --bg-secondary: #111827;
+      --bg-card: #1a2236;
+      --bg-card-hover: #1e2a40;
+      --accent-blue: #3b82f6;
+      --accent-cyan: #06b6d4;
+      --accent-purple: #8b5cf6;
+      --accent-orange: #f59e0b;
+      --accent-red: #ef4444;
+      --accent-green: #10b981;
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #475569;
+      --border: #1e3a5f;
+      --border-light: #2d4a6e;
+      --demo-color: #f59e0b;
+      --shadow: 0 4px 24px rgba(0,0,0,0.4);
+      --glow-blue: 0 0 20px rgba(59,130,246,0.3);
+      --glow-cyan: 0 0 20px rgba(6,182,212,0.3);
+
+      /* Probability color scale */
+      --prob-0: #1e293b;
+      --prob-20: #1d4ed8;
+      --prob-40: #0891b2;
+      --prob-60: #d97706;
+      --prob-80: #dc2626;
+      --prob-100: #7c2d12;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ===== HEADER ===== */
+    header {
+      background: linear-gradient(135deg, #0a0e1a 0%, #111827 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      backdrop-filter: blur(12px);
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .header-logo {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+
+    .header-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1.2;
+    }
+
+    .header-subtitle {
+      font-size: 11px;
+      color: var(--text-secondary);
+      font-weight: 400;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .demo-badge {
+      background: linear-gradient(135deg, rgba(245,158,11,0.15), rgba(245,158,11,0.05));
+      border: 1px solid rgba(245,158,11,0.4);
+      color: var(--demo-color);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 20px;
+      letter-spacing: 0.5px;
+      animation: pulse-demo 2s infinite;
+    }
+
+    @keyframes pulse-demo {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(245,158,11,0.3); }
+      50% { box-shadow: 0 0 0 6px rgba(245,158,11,0); }
+    }
+
+    .status-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--accent-green);
+      animation: blink 1.5s infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    .last-update {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* ===== DISCLAIMER ===== */
+    .disclaimer-bar {
+      background: linear-gradient(90deg, rgba(139,92,246,0.1), rgba(59,130,246,0.1));
+      border-bottom: 1px solid var(--border);
+      padding: 8px 24px;
+      font-size: 11px;
+      color: var(--text-secondary);
+      text-align: center;
+    }
+
+    .disclaimer-bar strong { color: var(--accent-purple); }
+
+    /* ===== MAIN LAYOUT ===== */
+    .main-container {
+      display: grid;
+      grid-template-columns: 320px 1fr 280px;
+      grid-template-rows: 100%;
+      height: calc(100vh - 95px);
+      gap: 0;
+      position: relative;
+    }
+
+    /* ===== LEFT PANEL ===== */
+    .left-panel {
+      background: var(--bg-secondary);
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .panel-section {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      transition: border-color 0.2s;
+    }
+
+    .panel-section:hover {
+      border-color: var(--border-light);
+    }
+
+    .section-title {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    /* Horizon selector */
+    .horizon-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+    }
+
+    .horizon-btn {
+      background: rgba(59,130,246,0.05);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+      color: var(--text-secondary);
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .horizon-btn:hover {
+      background: rgba(59,130,246,0.1);
+      border-color: var(--accent-blue);
+      color: var(--text-primary);
+    }
+
+    .horizon-btn.active {
+      background: linear-gradient(135deg, rgba(59,130,246,0.2), rgba(139,92,246,0.1));
+      border-color: var(--accent-blue);
+      color: var(--accent-blue);
+      box-shadow: var(--glow-blue);
+    }
+
+    .horizon-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* Variable selector */
+    .var-buttons {
+      display: flex;
+      gap: 6px;
+    }
+
+    .var-btn {
+      flex: 1;
+      background: rgba(6,182,212,0.05);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+      color: var(--text-secondary);
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .var-btn:hover {
+      background: rgba(6,182,212,0.1);
+      border-color: var(--accent-cyan);
+    }
+
+    .var-btn.active {
+      background: linear-gradient(135deg, rgba(6,182,212,0.2), rgba(59,130,246,0.1));
+      border-color: var(--accent-cyan);
+      color: var(--accent-cyan);
+    }
+
+    /* Conditions grid */
+    .conditions-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .condition-item {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px;
+    }
+
+    .condition-label {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 3px;
+    }
+
+    .condition-value {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-primary);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .condition-unit {
+      font-size: 10px;
+      color: var(--text-secondary);
+      font-weight: 400;
+    }
+
+    /* Probability bars */
+    .prob-bar-container {
+      margin-bottom: 8px;
+    }
+
+    .prob-bar-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+    }
+
+    .prob-bar-value {
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .prob-bar-track {
+      height: 6px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .prob-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Legend */
+    .legend-items {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    .legend-swatch {
+      width: 24px;
+      height: 10px;
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+
+    .legend-note {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 6px;
+      font-style: italic;
+    }
+
+    /* Model info */
+    .model-info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 5px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      font-size: 11px;
+    }
+
+    .model-info-row:last-child { border-bottom: none; }
+    .model-info-key { color: var(--text-muted); }
+    .model-info-val { color: var(--text-primary); font-weight: 600; font-family: 'JetBrains Mono', monospace; font-size: 10px; }
+
+    /* ===== MAP ===== */
+    .map-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      min-height: 450px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
+      min-height: 450px;
+      flex: 1;
+      z-index: 1;
+    }
+
+    .map-overlay-badge {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(10,14,26,0.85);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 6px 16px;
+      font-size: 11px;
+      color: var(--demo-color);
+      font-weight: 700;
+      z-index: 500;
+      letter-spacing: 1px;
+    }
+
+    /* ===== RIGHT PANEL ===== */
+    .right-panel {
+      background: var(--bg-secondary);
+      border-left: 1px solid var(--border);
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* Timeline chart */
+    .chart-container {
+      position: relative;
+      height: 140px;
+    }
+
+    /* Reliability diagram */
+    .rel-chart-container {
+      position: relative;
+      height: 130px;
+    }
+
+    /* Feature importance */
+    .feat-bar {
+      margin-bottom: 6px;
+    }
+
+    .feat-bar-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      color: var(--text-secondary);
+      margin-bottom: 2px;
+    }
+
+    .feat-bar-track {
+      height: 4px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 2px;
+    }
+
+    .feat-bar-fill {
+      height: 100%;
+      border-radius: 2px;
+      background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple));
+    }
+
+    /* ===== LOADING ===== */
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: var(--bg-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      transition: opacity 0.5s;
+    }
+
+    .loading-content {
+      text-align: center;
+    }
+
+    .loading-spinner {
+      width: 48px;
+      height: 48px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent-blue);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 16px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loading-text { font-size: 14px; color: var(--text-secondary); }
+    .loading-sub { font-size: 11px; color: var(--text-muted); margin-top: 6px; }
+
+    /* ===== SCROLLBAR ===== */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 2px; }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 1200px) {
+      .main-container { grid-template-columns: 280px 1fr 240px; }
+    }
+
+    @media (max-width: 900px) {
+      .main-container { grid-template-columns: 1fr; grid-template-rows: auto 400px auto; }
+      .left-panel, .right-panel { max-height: 300px; }
+    }
+
+    /* Leaflet overrides */
+    .leaflet-container { background: #0a0e1a; }
+
+    /* Pure OpenStreetMap Dark Filter (Zero API Key Required) */
+    .map-tiles-dark {
+      filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
+    }
+
+    .leaflet-control-zoom a, .leaflet-control-layers {
+      background: var(--bg-card) !important;
+      color: var(--text-secondary) !important;
+      border-color: var(--border) !important;
+      border-radius: 8px !important;
+    }
+    .leaflet-control-zoom a:hover, .leaflet-control-layers-expanded {
+      background: var(--bg-card-hover) !important;
+      color: var(--text-primary) !important;
+      box-shadow: var(--shadow) !important;
+    }
+    .leaflet-control-layers-toggle {
+      filter: invert(0.8);
+    }
+    .leaflet-control-layers-base label {
+      color: var(--text-primary);
+      font-size: 11px;
+      margin-bottom: 4px;
+    }
+
+    /* OSM Search Bar Overlay */
+    .map-search-bar {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      z-index: 500;
+      display: flex;
+      gap: 6px;
+      background: rgba(17, 24, 39, 0.85);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      padding: 6px 10px;
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+    }
+
+    .map-search-bar input {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      width: 250px;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    .map-search-bar input:focus {
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+    }
+
+    .map-search-bar button {
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+      border: none;
+      color: #ffffff;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 12px;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    .map-search-bar button:hover {
+      opacity: 0.9;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Loading overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-content">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">Initializing Nowcasting System</div>
+    <div class="loading-sub">⚠ DEMO / SYNTHETIC DATA MODE</div>
+  </div>
+</div>
+
+<!-- Header -->
+<header>
+  <div class="header-left">
+    <div class="header-logo">⛈</div>
+    <div>
+      <div class="header-title">Thunderstorm & Lightning Nowcasting</div>
+      <div class="header-subtitle">AI/ML Research Prototype · India · 0–6 Hour Forecast</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="demo-badge" id="dataBadge">⚠ DATA MODE: DEMO</div>
+    <div class="status-dot" id="statusDot"></div>
+    <div class="last-update" id="lastUpdate">Connecting...</div>
+  </div>
+</header>
+
+<!-- Disclaimer -->
+<div class="disclaimer-bar">
+  <strong>⚠ RESEARCH PROTOTYPE</strong> — Not an operational meteorological warning system.
+  All data in DEMO mode is <strong>SYNTHETIC</strong> and does NOT represent real atmospheric observations.
+  · ERA5 = historical reanalysis, not forecast · Model metrics not yet scientifically validated
+</div>
+
+<!-- Main -->
+<div class="main-container">
+
+  <!-- LEFT PANEL -->
+  <div class="left-panel">
+
+    <!-- Horizon selector -->
+    <div class="panel-section">
+      <div class="section-title">Forecast Horizon</div>
+      <div class="horizon-grid">
+        <button class="horizon-btn active" id="h-15" onclick="setHorizon(15)">
+          <div>+15</div><div class="horizon-label">min</div>
+        </button>
+        <button class="horizon-btn" id="h-30" onclick="setHorizon(30)">
+          <div>+30</div><div class="horizon-label">min</div>
+        </button>
+        <button class="horizon-btn" id="h-60" onclick="setHorizon(60)">
+          <div>+1</div><div class="horizon-label">hour</div>
+        </button>
+        <button class="horizon-btn" id="h-120" onclick="setHorizon(120)">
+          <div>+2</div><div class="horizon-label">hours</div>
+        </button>
+        <button class="horizon-btn" id="h-180" onclick="setHorizon(180)">
+          <div>+3</div><div class="horizon-label">hours</div>
+        </button>
+        <button class="horizon-btn" id="h-360" onclick="setHorizon(360)">
+          <div>+6</div><div class="horizon-label">hours</div>
+        </button>
+      </div>
+    </div>
+
+    <!-- Variable selector -->
+    <div class="panel-section">
+      <div class="section-title">Display Variable</div>
+      <div class="var-buttons">
+        <button class="var-btn active" id="var-thunderstorm" onclick="setVariable('thunderstorm')">
+          ⛈ Thunderstorm
+        </button>
+        <button class="var-btn" id="var-lightning" onclick="setVariable('lightning')">
+          ⚡ Lightning
+        </button>
+      </div>
+    </div>
+
+    <!-- Probability display -->
+    <div class="panel-section">
+      <div class="section-title">Forecast Probabilities</div>
+      <div id="probBars">
+        <!-- Filled by JS -->
+      </div>
+    </div>
+
+    <!-- Legend -->
+    <div class="panel-section">
+      <div class="section-title">Probability Legend</div>
+      <div class="legend-items">
+        <div class="legend-item">
+          <div class="legend-swatch" style="background: #1d4ed8;"></div>
+          <span>0–20% — Low</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-swatch" style="background: #0891b2;"></div>
+          <span>20–40% — Moderate</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-swatch" style="background: #d97706;"></div>
+          <span>40–60% — Elevated</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-swatch" style="background: #dc2626;"></div>
+          <span>60–80% — High</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-swatch" style="background: #7c2d12;"></div>
+          <span>80–100% — Very High</span>
+        </div>
+      </div>
+      <div class="legend-note">
+        These categories do NOT correspond to official IMD warning levels.
+        This is a research prototype only.
+      </div>
+    </div>
+
+    <!-- Current conditions -->
+    <div class="panel-section">
+      <div class="section-title">Current Conditions [DEMO/SYNTHETIC]</div>
+      <div class="conditions-grid" id="conditionsGrid">
+        <div class="condition-item">
+          <div class="condition-label">Temp</div>
+          <div class="condition-value" id="condTemp">—<span class="condition-unit"> K</span></div>
+        </div>
+        <div class="condition-item">
+          <div class="condition-label">Humidity</div>
+          <div class="condition-value" id="condRH">—<span class="condition-unit"> %</span></div>
+        </div>
+        <div class="condition-item">
+          <div class="condition-label">CAPE</div>
+          <div class="condition-value" id="condCAPE">—<span class="condition-unit"> J/kg</span></div>
+        </div>
+        <div class="condition-item">
+          <div class="condition-label">Wind</div>
+          <div class="condition-value" id="condWind">—<span class="condition-unit"> m/s</span></div>
+        </div>
+        <div class="condition-item">
+          <div class="condition-label">Refl. Max</div>
+          <div class="condition-value" id="condRefl">—<span class="condition-unit"> dBZ</span></div>
+        </div>
+        <div class="condition-item">
+          <div class="condition-label">Cloud BT</div>
+          <div class="condition-value" id="condBT">—<span class="condition-unit"> K</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Model info -->
+    <div class="panel-section">
+      <div class="section-title">Model Information</div>
+      <div class="model-info-row">
+        <span class="model-info-key">Model</span>
+        <span class="model-info-val">Random Forest</span>
+      </div>
+      <div class="model-info-row">
+        <span class="model-info-key">Data Mode</span>
+        <span class="model-info-val" id="infoDataMode" style="color:var(--demo-color)">DEMO</span>
+      </div>
+      <div class="model-info-row">
+        <span class="model-info-key">Calibration</span>
+        <span class="model-info-val" id="infoCalib">—</span>
+      </div>
+      <div class="model-info-row">
+        <span class="model-info-key">Last Update</span>
+        <span class="model-info-val" id="infoUpdate">—</span>
+      </div>
+      <div class="model-info-row">
+        <span class="model-info-key">Region</span>
+        <span class="model-info-val" id="infoRegion">—</span>
+      </div>
+      <div class="model-info-row">
+        <span class="model-info-key">Grid</span>
+        <span class="model-info-val" id="infoGrid">—</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- MAP -->
+  <div class="map-container">
+    <div class="map-overlay-badge" id="mapOverlayBadge">⚠ DEMO / SYNTHETIC DATA</div>
+    <div class="map-search-bar" id="osmSearchBar">
+      <input type="text" id="osmSearchInput" placeholder="🔍 Search place on OSM (e.g. Delhi, Jaipur)..." onkeydown="if(event.key==='Enter') searchOsmLocation()" />
+      <button onclick="searchOsmLocation()">Search</button>
+    </div>
+    <div id="map"></div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="right-panel">
+
+    <!-- OSM Location Info -->
+    <div class="panel-section">
+      <div class="section-title">🗺 OpenStreetMap Location</div>
+      <div id="osmLocationInfo" style="font-size:11px; color:var(--text-secondary); line-height:1.5;">
+        Click anywhere on the map or search a location to query OpenStreetMap Nominatim details.
+      </div>
+      <div style="display:flex; gap:4px; margin-top:10px; flex-wrap:wrap;">
+        <button class="horizon-btn" style="padding:4px 8px; font-size:10px;" onclick="quickJumpOsm(28.6139, 77.2090, 'Delhi NCR')">📍 Delhi</button>
+        <button class="horizon-btn" style="padding:4px 8px; font-size:10px;" onclick="quickJumpOsm(19.0760, 72.8777, 'Mumbai')">📍 Mumbai</button>
+        <button class="horizon-btn" style="padding:4px 8px; font-size:10px;" onclick="quickJumpOsm(12.9716, 77.5946, 'Bengaluru')">📍 Bengaluru</button>
+        <button class="horizon-btn" style="padding:4px 8px; font-size:10px;" onclick="quickJumpOsm(22.5726, 88.3639, 'Kolkata')">📍 Kolkata</button>
+        <button class="horizon-btn" style="padding:4px 8px; font-size:10px;" onclick="quickJumpOsm(26.9124, 75.7873, 'Jaipur')">📍 Jaipur</button>
+      </div>
+    </div>
+
+    <!-- Risk timeline -->
+    <div class="panel-section">
+      <div class="section-title">Risk Timeline (0–6 hr)</div>
+      <div class="chart-container">
+        <canvas id="timelineChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Feature importance -->
+    <div class="panel-section">
+      <div class="section-title">Top Features [Demo]</div>
+      <div id="featureImportance">
+        <!-- Filled by JS -->
+      </div>
+      <div class="legend-note">
+        Feature importances shown after model training. These are illustrative in DEMO mode.
+      </div>
+    </div>
+
+    <!-- Calibration / reliability -->
+    <div class="panel-section">
+      <div class="section-title">Reliability Diagram [Demo]</div>
+      <div class="rel-chart-container">
+        <canvas id="reliabilityChart"></canvas>
+      </div>
+      <div class="legend-note">
+        A perfect model lies on the diagonal. This is synthetic demo data.
+      </div>
+    </div>
+
+    <!-- API status -->
+    <div class="panel-section">
+      <div class="section-title">API Status</div>
+      <div id="apiStatus" style="font-size:11px; color:var(--text-muted);">
+        Checking API...
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+// ==========================================
+// CONFIGURATION
+// ==========================================
+const API_BASE = 'http://localhost:8000';
+const HORIZONS = [15, 30, 60, 120, 180, 360];
+const HORIZON_LABELS = {15:'+15m', 30:'+30m', 60:'+1hr', 120:'+2hr', 180:'+3hr', 360:'+6hr'};
+
+let currentHorizon = 15;
+let currentVariable = 'thunderstorm';
+let forecastData = null;
+let configData = null;
+let map = null;
+let gridLayer = null;
+let timelineChart = null;
+let reliabilityChart = null;
+
+// ==========================================
+// UTILITY
+// ==========================================
+function probToColor(p) {
+  if (p < 0.01) return 'rgba(10,14,26,0)';
+  const stops = [
+    [0.00, [29, 78, 216]],
+    [0.20, [8, 145, 178]],
+    [0.40, [217, 119, 6]],
+    [0.60, [220, 38, 38]],
+    [0.80, [124, 45, 18]],
+    [1.00, [100, 20, 10]],
+  ];
+  for (let i = 1; i < stops.length; i++) {
+    if (p <= stops[i][0]) {
+      const t = (p - stops[i-1][0]) / (stops[i][0] - stops[i-1][0]);
+      const a = stops[i-1][1], b = stops[i][1];
+      const r = Math.round(a[0] + t*(b[0]-a[0]));
+      const g = Math.round(a[1] + t*(b[1]-a[1]));
+      const bv = Math.round(a[2] + t*(b[2]-a[2]));
+      const alpha = Math.min(0.85, p * 2.5 + 0.1);
+      return `rgba(${r},${g},${bv},${alpha})`;
+    }
+  }
+  return 'rgba(100,20,10,0.85)';
+}
+
+// ==========================================
+// MAP INITIALIZATION
+// ==========================================
+let searchMarker = null;
+
+// ==========================================
+// MAP INITIALIZATION
+// ==========================================
+function initMap() {
+  // Official OpenStreetMap Standard (100% Free, No API Key Required)
+  const osmStandard = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors',
+    maxZoom: 19,
+  });
+
+  // OpenStreetMap Dark Mode using pure CSS filter (No API Key Required)
+  const osmDark = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors',
+    maxZoom: 19,
+    className: 'map-tiles-dark',
+  });
+
+  // OpenStreetMap Humanitarian (HOT)
+  const osmHOT = L.tileLayer('https://tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+    attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors, HOT style',
+    maxZoom: 19,
+  });
+
+  // Esri World Imagery (Satellite)
+  const esriSatellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    attribution: 'Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics',
+    maxZoom: 19,
+  });
+
+  // OpenTopoMap (Topographic)
+  const openTopo = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors, SRTM | OpenTopoMap',
+    maxZoom: 17,
+  });
+
+  map = L.map('map', {
+    center: [28.6, 77.2],
+    zoom: 8,
+    zoomControl: true,
+    layers: [osmDark],
+  });
+
+  const baseMaps = {
+    "OSM Dark Mode (Free, No Key)": osmDark,
+    "OpenStreetMap Standard": osmStandard,
+    "OSM Humanitarian (HOT)": osmHOT,
+    "Satellite Imagery (Esri)": esriSatellite,
+    "OpenTopoMap (Terrain)": openTopo,
+  };
+
+  L.control.layers(baseMaps, null, { position: 'topleft' }).addTo(map);
+
+  map.on('click', function(e) {
+    fetchOsmReverseGeocode(e.latlng.lat, e.latlng.lng);
+  });
+
+  setTimeout(() => {
+    if (map) map.invalidateSize();
+  }, 250);
+
+  window.addEventListener('resize', () => {
+    if (map) map.invalidateSize();
+  });
+
+  return map;
+}
+
+// ==========================================
+// OPENSTREETMAP (OSM) API INTEGRATION
+// ==========================================
+async function fetchOsmReverseGeocode(lat, lon) {
+  const locDiv = document.getElementById('osmLocationInfo');
+  locDiv.innerHTML = `<span style="color:var(--accent-cyan)">Searching OSM Nominatim for (${lat.toFixed(3)}, ${lon.toFixed(3)})...</span>`;
+
+  try {
+    let data = null;
+    try {
+      const res = await fetch(`${API_BASE}/osm/reverse?lat=${lat}&lon=${lon}`);
+      if (res.ok) data = await res.json();
+    } catch {}
+
+    if (!data || data.error) {
+      const directRes = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&zoom=10`);
+      data = await directRes.json();
+    }
+
+    const name = data.display_name || 'Unknown Location';
+    const addr = data.address || {};
+    const label = addr.suburb || addr.town || addr.city || addr.county || addr.state_district || 'Location';
+
+    locDiv.innerHTML = `
+      <div style="margin-bottom:4px; font-weight:700; color:var(--text-primary);">📍 ${label}</div>
+      <div style="color:var(--text-muted); font-size:10px; margin-bottom:8px; line-height:1.4;">${name}</div>
+      <div style="display:flex; gap:6px;">
+        <span style="background:rgba(59,130,246,0.15); color:var(--accent-blue); padding:2px 6px; border-radius:4px; font-size:10px; font-family:'JetBrains Mono',monospace;">Lat: ${lat.toFixed(4)}</span>
+        <span style="background:rgba(139,92,246,0.15); color:var(--accent-purple); padding:2px 6px; border-radius:4px; font-size:10px; font-family:'JetBrains Mono',monospace;">Lon: ${lon.toFixed(4)}</span>
+      </div>
+    `;
+
+    if (searchMarker) map.removeLayer(searchMarker);
+    searchMarker = L.marker([lat, lon]).addTo(map)
+      .bindPopup(`
+        <div style="font-family:'Inter',sans-serif; font-size:11px; max-width:220px;">
+          <strong style="color:var(--accent-cyan)">🗺 OSM: ${label}</strong><br/>
+          <span style="font-size:10px; color:#94a3b8;">${name}</span>
+        </div>
+      `, { className: 'leaflet-tooltip-dark' })
+      .openPopup();
+
+  } catch (err) {
+    locDiv.innerHTML = `<span style="color:var(--text-muted)">Location: (${lat.toFixed(3)}, ${lon.toFixed(3)})</span>`;
+  }
+}
+
+async function searchOsmLocation() {
+  const input = document.getElementById('osmSearchInput');
+  const query = input.value.trim();
+  if (!query) return;
+
+  const locDiv = document.getElementById('osmLocationInfo');
+  locDiv.innerHTML = `<span style="color:var(--accent-cyan)">Searching OSM Nominatim for "${query}"...</span>`;
+
+  try {
+    let data = null;
+    try {
+      const res = await fetch(`${API_BASE}/osm/search?q=${encodeURIComponent(query)}`);
+      if (res.ok) data = await res.json();
+    } catch {}
+
+    let results = data?.results;
+    if (!results || results.length === 0) {
+      const directRes = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=5&countrycodes=in`);
+      results = await directRes.json();
+    }
+
+    if (results && results.length > 0) {
+      const best = results[0];
+      const lat = parseFloat(best.lat);
+      const lon = parseFloat(best.lon);
+
+      map.flyTo([lat, lon], 10, { duration: 1.5 });
+      fetchOsmReverseGeocode(lat, lon);
+    } else {
+      locDiv.innerHTML = `<span style="color:var(--accent-red)">No OSM locations found for "${query}"</span>`;
+    }
+  } catch (err) {
+    locDiv.innerHTML = `<span style="color:var(--accent-red)">OSM Search failed: ${err.message}</span>`;
+  }
+}
+
+function quickJumpOsm(lat, lon, name) {
+  document.getElementById('osmSearchInput').value = name;
+  map.flyTo([lat, lon], 9, { duration: 1.2 });
+  fetchOsmReverseGeocode(lat, lon);
+}
+
+// ==========================================
+// RENDER GRID ON MAP
+// ==========================================
+function renderGridOnMap(gridData) {
+  if (gridLayer) {
+    map.removeLayer(gridLayer);
+  }
+
+  const hKey = `${currentHorizon}m_${currentVariable}_probability`;
+
+  const rectangles = [];
+  const res = (configData?.region?.grid_resolution_km || 5) / 111.32;
+
+  for (const cell of gridData) {
+    const prob = cell[hKey] || 0;
+    if (prob < 0.01) continue;
+
+    const color = probToColor(prob);
+    const rect = L.rectangle(
+      [[cell.latitude - res/2, cell.longitude - res/2],
+       [cell.latitude + res/2, cell.longitude + res/2]],
+      {
+        color: 'transparent',
+        fillColor: color,
+        fillOpacity: 1,
+        weight: 0,
+      }
+    );
+
+    rect.bindTooltip(
+      `<b>${currentVariable === 'thunderstorm' ? '⛈ Thunderstorm' : '⚡ Lightning'}</b><br/>
+       Probability: <b>${(prob * 100).toFixed(0)}%</b><br/>
+       Horizon: ${HORIZON_LABELS[currentHorizon]}<br/>
+       Lat: ${cell.latitude.toFixed(3)}, Lon: ${cell.longitude.toFixed(3)}<br/>
+       <em style="color:#f59e0b">⚠ DEMO/SYNTHETIC</em>`,
+      { sticky: true, className: 'leaflet-tooltip-dark' }
+    );
+
+    rectangles.push(rect);
+  }
+
+  gridLayer = L.layerGroup(rectangles).addTo(map);
+}
+
+// ==========================================
+// TIMELINE CHART
+// ==========================================
+function initTimelineChart() {
+  const ctx = document.getElementById('timelineChart').getContext('2d');
+  timelineChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: HORIZONS.map(h => HORIZON_LABELS[h]),
+      datasets: [
+        {
+          label: 'Thunderstorm',
+          data: [],
+          borderColor: '#3b82f6',
+          backgroundColor: 'rgba(59,130,246,0.1)',
+          fill: true,
+          tension: 0.4,
+          pointRadius: 4,
+          pointBackgroundColor: '#3b82f6',
+        },
+        {
+          label: 'Lightning',
+          data: [],
+          borderColor: '#f59e0b',
+          backgroundColor: 'rgba(245,158,11,0.1)',
+          fill: true,
+          tension: 0.4,
+          pointRadius: 4,
+          pointBackgroundColor: '#f59e0b',
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: '#94a3b8', font: { size: 10 } } } },
+      scales: {
+        x: { ticks: { color: '#475569', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.03)' } },
+        y: {
+          min: 0, max: 1,
+          ticks: { color: '#475569', font: { size: 10 }, callback: v => (v*100)+'%' },
+          grid: { color: 'rgba(255,255,255,0.03)' },
+        },
+      },
+    },
+  });
+}
+
+function updateTimelineChart(summary) {
+  if (!timelineChart || !summary) return;
+  const tsData = HORIZONS.map(h => summary[`${h}m`]?.thunderstorm_probability?.max || 0);
+  const ltData = HORIZONS.map(h => summary[`${h}m`]?.lightning_probability?.max || 0);
+  timelineChart.data.datasets[0].data = tsData;
+  timelineChart.data.datasets[1].data = ltData;
+  timelineChart.update('active');
+}
+
+// ==========================================
+// RELIABILITY CHART (demo diagonal)
+// ==========================================
+function initReliabilityChart() {
+  const ctx = document.getElementById('reliabilityChart').getContext('2d');
+  const bins = [0.05,0.15,0.25,0.35,0.45,0.55,0.65,0.75,0.85,0.95];
+  // Demo: slight overconfidence pattern (common in RF)
+  const observed = bins.map(b => Math.min(1, b * 0.85 + Math.random() * 0.05));
+
+  reliabilityChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: bins.map(b => (b*100).toFixed(0)+'%'),
+      datasets: [
+        {
+          label: 'Perfect',
+          data: bins,
+          borderColor: '#475569',
+          borderDash: [4,4],
+          pointRadius: 0,
+          fill: false,
+        },
+        {
+          label: 'RF [Demo]',
+          data: observed,
+          borderColor: '#3b82f6',
+          backgroundColor: 'rgba(59,130,246,0.1)',
+          fill: true,
+          tension: 0.3,
+          pointRadius: 3,
+          pointBackgroundColor: '#3b82f6',
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: '#94a3b8', font: { size: 9 } } } },
+      scales: {
+        x: { ticks: { color: '#475569', font: { size: 9 } }, grid: { color: 'rgba(255,255,255,0.03)' }, title: { display: true, text: 'Mean Predicted', color: '#475569', font: { size: 9 } } },
+        y: { ticks: { color: '#475569', font: { size: 9 } }, grid: { color: 'rgba(255,255,255,0.03)' }, min: 0, max: 1, title: { display: true, text: 'Fraction Positive', color: '#475569', font: { size: 9 } } },
+      },
+    },
+  });
+}
+
+// ==========================================
+// FEATURE IMPORTANCE (demo values)
+// ==========================================
+const DEMO_FEATURES = [
+  { name: 'lightning_15min_count', value: 0.18 },
+  { name: 'refl_change_30min', value: 0.14 },
+  { name: 'CAPE_Jkg', value: 0.12 },
+  { name: 'cloud_top_cooling_30min', value: 0.10 },
+  { name: 'ir_bt_rolling_min', value: 0.09 },
+  { name: 'relative_humidity_pct', value: 0.08 },
+  { name: 'refl_max', value: 0.07 },
+  { name: 'storm_area_fraction', value: 0.06 },
+  { name: 'wind_speed_10m', value: 0.05 },
+  { name: 'blh_m', value: 0.04 },
+];
+
+function renderFeatureImportance() {
+  const container = document.getElementById('featureImportance');
+  const maxVal = DEMO_FEATURES[0].value;
+  container.innerHTML = DEMO_FEATURES.map(f => `
+    <div class="feat-bar">
+      <div class="feat-bar-label">
+        <span>${f.name}</span>
+        <span style="color:var(--accent-blue)">${(f.value*100).toFixed(0)}%</span>
+      </div>
+      <div class="feat-bar-track">
+        <div class="feat-bar-fill" style="width:${(f.value/maxVal*100).toFixed(0)}%"></div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ==========================================
+// PROBABILITY BARS
+// ==========================================
+function renderProbBars(horizons_data) {
+  const container = document.getElementById('probBars');
+  const colorFn = p => {
+    if (p < 0.2) return '#1d4ed8';
+    if (p < 0.4) return '#0891b2';
+    if (p < 0.6) return '#d97706';
+    if (p < 0.8) return '#dc2626';
+    return '#7c2d12';
+  };
+
+  container.innerHTML = HORIZONS.map(h => {
+    const hdata = horizons_data?.[`${h}m`];
+    const prob = hdata?.[`${currentVariable}_probability`];
+    const pVal = typeof prob === 'number' ? prob : (Array.isArray(prob) ? Math.max(...prob) : 0);
+    const pct = Math.round(pVal * 100);
+    const color = colorFn(pVal);
+    return `
+      <div class="prob-bar-container">
+        <div class="prob-bar-label">
+          <span>${HORIZON_LABELS[h]}</span>
+          <span class="prob-bar-value" style="color:${color}">${pct}%</span>
+        </div>
+        <div class="prob-bar-track">
+          <div class="prob-bar-fill" style="width:${pct}%; background:${color};"></div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ==========================================
+// HORIZON / VARIABLE CONTROLS
+// ==========================================
+function setHorizon(h) {
+  currentHorizon = h;
+  HORIZONS.forEach(hh => {
+    document.getElementById(`h-${hh}`)?.classList.toggle('active', hh === h);
+  });
+  if (forecastData?.grid) renderGridOnMap(forecastData.grid);
+}
+
+function setVariable(v) {
+  currentVariable = v;
+  ['thunderstorm', 'lightning'].forEach(vv => {
+    document.getElementById(`var-${vv}`)?.classList.toggle('active', vv === v);
+  });
+  if (forecastData?.grid) renderGridOnMap(forecastData.grid);
+  if (forecastData?.horizons) renderProbBars(forecastData.horizons);
+}
+
+// ==========================================
+// CONDITIONS UPDATE
+// ==========================================
+function updateConditions(data) {
+  // Extract representative values from first grid cell's features
+  // In demo mode these are illustrative only
+  const summary = data?.summary;
+  if (!summary) return;
+  const t15 = summary['15m'];
+  const tsMax = t15?.thunderstorm_probability?.max || 0;
+  // Synthetic plausible values
+  document.getElementById('condTemp').innerHTML = `${(293 + tsMax * 10).toFixed(0)}<span class="condition-unit"> K</span>`;
+  document.getElementById('condRH').innerHTML = `${(65 + tsMax * 20).toFixed(0)}<span class="condition-unit"> %</span>`;
+  document.getElementById('condCAPE').innerHTML = `${(tsMax * 1800).toFixed(0)}<span class="condition-unit"> J/kg</span>`;
+  document.getElementById('condWind').innerHTML = `${(5 + tsMax * 5).toFixed(1)}<span class="condition-unit"> m/s</span>`;
+  document.getElementById('condRefl').innerHTML = `${(tsMax * 55).toFixed(0)}<span class="condition-unit"> dBZ</span>`;
+  document.getElementById('condBT').innerHTML = `${(310 - tsMax * 80).toFixed(0)}<span class="condition-unit"> K</span>`;
+}
+
+// ==========================================
+// API FETCH
+// ==========================================
+async function fetchForecast() {
+  try {
+    const res = await fetch(`${API_BASE}/forecast`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    forecastData = data;
+
+    // Update UI
+    const ts = data.timestamp ? new Date(data.timestamp).toLocaleTimeString() : 'N/A';
+    document.getElementById('lastUpdate').textContent = `T0: ${ts}`;
+    document.getElementById('infoUpdate').textContent = ts;
+    document.getElementById('infoDataMode').textContent = data.data_mode || 'DEMO';
+    document.getElementById('dataBadge').textContent = `⚠ DATA MODE: ${data.data_mode || 'DEMO'}`;
+    document.getElementById('infoCalib').textContent = data.horizons?.['15m']?.calibration_applied ? 'Enabled' : 'None';
+
+    if (data.grid) renderGridOnMap(data.grid);
+    if (data.horizons) renderProbBars(data.horizons);
+    if (data.summary) {
+      updateTimelineChart(data.summary);
+      updateConditions(data);
+    }
+    document.getElementById('statusDot').style.background = '#10b981';
+    return data;
+  } catch (e) {
+    console.warn('API unavailable:', e.message);
+    document.getElementById('apiStatus').innerHTML = `
+      <span style="color:var(--accent-red)">⚠ API offline</span><br/>
+      <span>Run: <code>uvicorn api.main:app --reload</code></span><br/>
+      <span>Showing synthetic demo data.</span>
+    `;
+    document.getElementById('statusDot').style.background = '#ef4444';
+    useDemoData();
+    return null;
+  }
+}
+
+async function fetchConfig() {
+  try {
+    const res = await fetch(`${API_BASE}/config`);
+    if (!res.ok) return;
+    configData = await res.json();
+    document.getElementById('infoRegion').textContent = configData.region?.name || '—';
+    const shape = configData.grid_shape;
+    document.getElementById('infoGrid').textContent = shape ? `${shape[0]}×${shape[1]}` : '—';
+    document.getElementById('apiStatus').innerHTML = `<span style="color:var(--accent-green)">✓ API online</span>`;
+  } catch {}
+}
+
+// ==========================================
+// DEMO DATA (when API offline)
+// ==========================================
+function useDemoData() {
+  // Generate synthetic probability map for Delhi NCR area
+  const gridData = [];
+  const latRange = [28.0, 29.0];
+  const lonRange = [76.5, 78.0];
+  const step = 5 / 111.32;  // 5km steps
+
+  // Simulate a storm cell
+  const stormLat = 28.5 + Math.random() * 0.3;
+  const stormLon = 77.1 + Math.random() * 0.3;
+
+  for (let lat = latRange[0]; lat < latRange[1]; lat += step) {
+    for (let lon = lonRange[0]; lon < lonRange[1]; lon += step) {
+      const dist = Math.sqrt((lat-stormLat)**2 + (lon-stormLon)**2) * 111;
+      const baseProb = Math.exp(-0.5 * (dist/30)**2);
+
+      const cell = { latitude: lat, longitude: lon };
+      for (const h of HORIZONS) {
+        const decay = Math.exp(-h/120);
+        const ts = Math.min(1, baseProb * decay + Math.random() * 0.05);
+        const lt = Math.min(1, ts * 0.85);
+        cell[`${h}m_thunderstorm_probability`] = ts;
+        cell[`${h}m_lightning_probability`] = lt;
+      }
+      gridData.push(cell);
+    }
+  }
+
+  forecastData = {
+    timestamp: new Date().toISOString(),
+    region: 'DELHI_NCR',
+    data_mode: 'DEMO/SYNTHETIC',
+    grid: gridData,
+    horizons: Object.fromEntries(HORIZONS.map(h => [
+      `${h}m`, {
+        thunderstorm_probability: Math.exp(-h/180) * 0.7,
+        lightning_probability: Math.exp(-h/180) * 0.55,
+        calibration_applied: false,
+      }
+    ])),
+    summary: Object.fromEntries(HORIZONS.map(h => [
+      `${h}m`, {
+        thunderstorm_probability: { max: Math.exp(-h/180) * 0.7 },
+        lightning_probability: { max: Math.exp(-h/180) * 0.55 },
+      }
+    ])),
+  };
+
+  const horizonsForBars = {};
+  for (const h of HORIZONS) {
+    horizonsForBars[`${h}m`] = {
+      thunderstorm_probability: forecastData.summary[`${h}m`].thunderstorm_probability.max,
+      lightning_probability: forecastData.summary[`${h}m`].lightning_probability.max,
+    };
+  }
+
+  renderGridOnMap(gridData);
+  renderProbBars(horizonsForBars);
+  updateTimelineChart(forecastData.summary);
+  updateConditions(forecastData);
+
+  const ts = new Date(forecastData.timestamp).toLocaleTimeString();
+  document.getElementById('lastUpdate').textContent = `T0: ${ts} [DEMO]`;
+  document.getElementById('infoUpdate').textContent = ts;
+  document.getElementById('infoRegion').textContent = 'DELHI_NCR';
+  document.getElementById('infoGrid').textContent = `${gridData.length} cells`;
+}
+
+// ==========================================
+// INITIALIZATION
+// ==========================================
+async function initialize() {
+  initMap();
+  initTimelineChart();
+  initReliabilityChart();
+  renderFeatureImportance();
+
+  await fetchConfig();
+  await fetchForecast();
+
+  // Hide loading overlay
+  setTimeout(() => {
+    const lo = document.getElementById('loadingOverlay');
+    lo.style.opacity = '0';
+    setTimeout(() => {
+      lo.style.display = 'none';
+      if (map) map.invalidateSize();
+    }, 500);
+  }, 800);
+
+  // Auto-refresh every 5 minutes
+  setInterval(fetchForecast, 5 * 60 * 1000);
+}
+
+// Add custom tooltip style
+const style = document.createElement('style');
+style.textContent = `
+  .leaflet-tooltip-dark {
+    background: rgba(10,14,26,0.9);
+    color: #f1f5f9;
+    border: 1px solid #1e3a5f;
+    border-radius: 6px;
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    padding: 6px 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  }
+`;
+document.head.appendChild(style);
+
+window.addEventListener('load', initialize);
+</script>
+</body>
+</html>

@@ -1,0 +1,160 @@
+# ============================================================
+# Data Sources Configuration
+# ============================================================
+# Registry of all data sources used in the project.
+# Credentials MUST come from .env or environment variables.
+# Do NOT put real API keys here.
+#
+# access_status values:
+#   DEMO    - synthetic data only
+#   MANUAL  - user must download and place files
+#   RESTRICTED - requires special authorization
+#   UNKNOWN - access method not yet verified
+# ============================================================
+
+imd:
+  api_base_url_env: "IMD_API_BASE_URL"     # read from env
+  api_key_env: "IMD_API_KEY"               # read from env
+  radar_endpoint_env: "IMD_RADAR_ENDPOINT"
+  lightning_endpoint_env: "IMD_LIGHTNING_ENDPOINT"
+  access_status: RESTRICTED
+  notes: >
+    IMD provides official weather APIs. An API key is required.
+    Apply through https://mausam.imd.gov.in/ or IMD API portal.
+    Last verified: 2025-01
+
+radar_sources:
+  # These are documented Indian Doppler radar stations.
+  # Not all stations may have data access programmatically.
+  - id: RADAR_DEL
+    name: "New Delhi Radar"
+    latitude: 28.5918
+    longitude: 77.2006
+    elevation_m: 216
+    coverage_km: 250
+    available_products: ["reflectivity", "radial_velocity", "spectrum_width"]
+    temporal_resolution_min: 10
+    data_format: ["GeoTIFF", "NetCDF"]
+    access_status: RESTRICTED
+    provider: "IMD"
+    notes: "S-band Doppler radar"
+
+  - id: RADAR_MUM
+    name: "Mumbai Radar"
+    latitude: 19.0760
+    longitude: 72.8777
+    elevation_m: 14
+    coverage_km: 250
+    available_products: ["reflectivity", "radial_velocity"]
+    temporal_resolution_min: 10
+    data_format: ["GeoTIFF"]
+    access_status: RESTRICTED
+    provider: "IMD"
+
+  - id: RADAR_CHE
+    name: "Chennai Radar"
+    latitude: 13.0827
+    longitude: 80.2707
+    elevation_m: 16
+    coverage_km: 250
+    available_products: ["reflectivity", "radial_velocity", "spectrum_width"]
+    temporal_resolution_min: 10
+    data_format: ["GeoTIFF", "NetCDF"]
+    access_status: RESTRICTED
+    provider: "IMD"
+
+  - id: RADAR_SYNTH
+    name: "Synthetic Demo Radar"
+    latitude: 28.6139
+    longitude: 77.2090
+    elevation_m: 200
+    coverage_km: 250
+    available_products: ["reflectivity", "radial_velocity", "spectrum_width", "ZDR", "KDP"]
+    temporal_resolution_min: 10
+    data_format: ["NetCDF"]
+    access_status: DEMO
+    provider: "SYNTHETIC"
+    notes: "DEMO MODE: Synthetic data only. Labelled [DEMO/SYNTHETIC]."
+
+satellite:
+  - name: "INSAT-3DR"
+    channels: ["VIS", "SWIR", "MIR", "TIR1", "TIR2", "WV"]
+    temporal_resolution_min: 30
+    spatial_resolution_km: 1.0
+    provider: "ISRO/IMD"
+    url: "https://mosdac.gov.in/"
+    access_status: MANUAL
+    notes: >
+      INSAT-3DR/3DS data available via MOSDAC (Meteorological & Oceanographic
+      Satellite Data Archival Centre). Account registration required.
+      Data available in HDF5/NetCDF format.
+      Last verified: 2025-01
+
+  - name: "INSAT-3DS"
+    channels: ["VIS", "SWIR", "MIR", "TIR1", "TIR2", "WV"]
+    temporal_resolution_min: 30
+    spatial_resolution_km: 1.0
+    provider: "ISRO/IMD"
+    url: "https://mosdac.gov.in/"
+    access_status: MANUAL
+
+  - name: "SYNTHETIC_SAT"
+    channels: ["TIR1", "WV", "VIS"]
+    temporal_resolution_min: 15
+    spatial_resolution_km: 5.0
+    provider: "SYNTHETIC"
+    access_status: DEMO
+    notes: "DEMO MODE: Synthetic data only."
+
+lightning:
+  - name: "IMD Lightning Network"
+    provider: "IMD"
+    access_status: RESTRICTED
+    notes: "Lightning data via IMD API. Requires API key."
+
+  - name: "SYNTHETIC_LIGHTNING"
+    provider: "SYNTHETIC"
+    access_status: DEMO
+    notes: "DEMO MODE: Synthetic point events."
+
+nwp:
+  era5:
+    name: "ERA5 Reanalysis"
+    provider: "ECMWF/Copernicus"
+    url: "https://cds.climate.copernicus.eu/"
+    api_key_env: "ERA5_CDS_KEY"
+    api_url_env: "ERA5_CDS_URL"
+    temporal_resolution: "hourly"
+    spatial_resolution_deg: 0.25
+    historical_coverage: "1940-present (delay ~5 days)"
+    variables:
+      surface:
+        - "2m_temperature"
+        - "2m_dewpoint_temperature"
+        - "surface_pressure"
+        - "10m_u_component_of_wind"
+        - "10m_v_component_of_wind"
+        - "total_cloud_cover"
+        - "total_precipitation"
+        - "boundary_layer_height"
+        - "convective_available_potential_energy"
+        - "convective_inhibition"
+      pressure_levels:
+        - "temperature"
+        - "u_component_of_wind"
+        - "v_component_of_wind"
+        - "relative_humidity"
+        - "geopotential"
+      pressure_level_list: [850, 700, 500, 300]
+    access_status: MANUAL
+    notes: >
+      ERA5 is HISTORICAL REANALYSIS, NOT a future forecast.
+      Must NOT be used as future prediction.
+      Access via CDS API (cdsapi Python package).
+      cds_url: https://cds.climate.copernicus.eu/api
+
+  synthetic_nwp:
+    name: "Synthetic NWP"
+    provider: "SYNTHETIC"
+    access_status: DEMO
+    notes: "DEMO MODE: Synthetic atmospheric fields."

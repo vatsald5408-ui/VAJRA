@@ -1,0 +1,52 @@
+{
+  "label": "lightning_120m",
+  "n_samples": 5474,
+  "n_positive": 429,
+  "n_negative": 5045,
+  "positive_rate": 0.0784,
+  "threshold": 0.5,
+  "evaluated_at": "2026-09-26T15:46:06.759971+00:00",
+  "precision": 0.1286,
+  "recall": 0.1049,
+  "f1": 0.1155,
+  "roc_auc": 0.6373,
+  "pr_auc": 0.117,
+  "true_positive": 45,
+  "false_positive": 305,
+  "true_negative": 4740,
+  "false_negative": 384,
+  "false_alarm_ratio": 0.8714,
+  "probability_of_detection": 0.1049,
+  "critical_success_index": 0.0613,
+  "brier_score": 0.1252,
+  "log_loss": 0.4024,
+  "expected_calibration_error": 0.3514,
+  "calibration_curve": {
+    "mean_predicted": [
+      0.0211,
+      0.162,
+      0.2482,
+      0.3482,
+      0.4433,
+      0.5304,
+      0.6835,
+      0.748,
+      0.8252
+    ],
+    "fraction_positive": [
+      0.01,
+      0.071,
+      0.0772,
+      0.1011,
+      0.1175,
+      0.1007,
+      0.1111,
+      0.1585,
+      0.1
+    ]
+  },
+  "model": "RandomForest_lightning_120m",
+  "split": "validation",
+  "data_mode": "DEMO",
+  "note": "DEMO/SYNTHETIC metrics \u2014 not scientifically validated"
+}

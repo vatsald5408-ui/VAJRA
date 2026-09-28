@@ -1,0 +1,67 @@
+# ============================================================
+# Region Configuration
+# ============================================================
+# Defines the geographic extent and grid properties of the
+# study region. All data sources will be reprojected to this
+# common grid.
+#
+# Predefined regions are provided. Active region is selected
+# by setting 'active_region'.
+#
+# DO NOT hardcode bounding boxes in source code.
+# ============================================================
+
+active_region: DELHI_NCR
+
+regions:
+  DELHI_NCR:
+    description: "Delhi National Capital Region (prototype region)"
+    north: 29.0
+    south: 28.0
+    east: 78.0
+    west: 76.5
+    grid_resolution_km: 5.0      # coarser for fast prototype runs
+    crs: "EPSG:4326"
+
+  INDIA:
+    description: "Mainland India"
+    north: 37.0
+    south: 6.5
+    east: 97.5
+    west: 68.0
+    grid_resolution_km: 10.0
+    crs: "EPSG:4326"
+
+  NORTHWEST_INDIA:
+    description: "Northwest India including Punjab, Haryana, Rajasthan"
+    north: 33.0
+    south: 24.0
+    east: 78.0
+    west: 68.0
+    grid_resolution_km: 5.0
+    crs: "EPSG:4326"
+
+  NORTHEAST_INDIA:
+    description: "Northeast India including Assam, Meghalaya (high lightning frequency)"
+    north: 28.5
+    south: 22.0
+    east: 97.5
+    west: 88.0
+    grid_resolution_km: 5.0
+    crs: "EPSG:4326"
+
+  PENINSULAR_INDIA:
+    description: "Peninsular India"
+    north: 22.0
+    south: 6.5
+    east: 82.0
+    west: 74.0
+    grid_resolution_km: 10.0
+    crs: "EPSG:4326"
+
+# Projection used internally for distance/area computations
+# India-specific Lambert Conformal Conic equivalent
+metric_crs: "EPSG:7755"   # India NSRS97 / LCC
+
+# Maximum number of grid cells in each dimension (memory guard)
+max_grid_cells: 500

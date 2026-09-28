@@ -1,0 +1,52 @@
+{
+  "label": "thunderstorm_120m",
+  "n_samples": 5474,
+  "n_positive": 319,
+  "n_negative": 5155,
+  "positive_rate": 0.0583,
+  "threshold": 0.5,
+  "evaluated_at": "2026-09-26T15:46:05.518067+00:00",
+  "precision": 0.0279,
+  "recall": 0.0219,
+  "f1": 0.0246,
+  "roc_auc": 0.663,
+  "pr_auc": 0.0826,
+  "true_positive": 7,
+  "false_positive": 244,
+  "true_negative": 4911,
+  "false_negative": 312,
+  "false_alarm_ratio": 0.9721,
+  "probability_of_detection": 0.0219,
+  "critical_success_index": 0.0124,
+  "brier_score": 0.1118,
+  "log_loss": 0.3709,
+  "expected_calibration_error": 0.3978,
+  "calibration_curve": {
+    "mean_predicted": [
+      0.0175,
+      0.1602,
+      0.2474,
+      0.3481,
+      0.4411,
+      0.5262,
+      0.6758,
+      0.7488,
+      0.8241
+    ],
+    "fraction_positive": [
+      0.0034,
+      0.0387,
+      0.055,
+      0.1109,
+      0.1024,
+      0.0986,
+      0.0,
+      0.0,
+      0.0
+    ]
+  },
+  "model": "RandomForest_thunderstorm_120m",
+  "split": "validation",
+  "data_mode": "DEMO",
+  "note": "DEMO/SYNTHETIC metrics \u2014 not scientifically validated"
+}
