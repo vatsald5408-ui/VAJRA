@@ -1,4 +1,20 @@
-<!DOCTYPE html>
+# -*- coding: utf-8 -*-
+"""
+VAJRA — UI/UX Spatial Revolution
+A Living Atmospheric Canvas (Edge-to-Edge Fullscreen Environment)
+- NO permanent left/right sidebars
+- Edge-to-edge full viewport OSM cartography
+- Floating Situation Bar at top (thin atmospheric status line)
+- Floating Contextual Tool Dock (left edge, expandable)
+- Emergent Contextual Storm Inspector (slides out from right when storm is selected)
+- Storm Focus Mode (smooth zoom, non-selected dimming, spatial trajectory)
+- Spatial Forecast Scrubber floating near bottom edge (OBSERVED ─── NOW ─── +15m ─── +120m)
+- Field View presentation mode (hides all chrome for pure cinematic atmospheric exploration)
+- Spatial "What Changed" delta tags near the storm on the map
+- Pure OpenStreetMap cartography with AirNet-grade styling, zero emojis, professional SVG glyphs
+"""
+
+code = """<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -1189,11 +1205,11 @@
           [22.39, 87.80], [22.45, 87.94]
         ],
         story: [
-          { time: '14:10 • FORMED', narrative: 'Initiated in Midnapore sector (38 dBZ)', status: 'done' },
-          { time: '14:18 • DEVELOPING', narrative: 'Reflectivity surge (+10 dBZ in 8 min)', status: 'done' },
-          { time: '14:26 • LIGHTNING ACCELERATION', narrative: 'Discharge rate spiked to 38 strokes/min', status: 'done' },
-          { time: '14:34 • INTENSIFYING (NOW)', narrative: 'Severe hail core with overshooting convective top', status: 'active-now' },
-          { time: '14:50 • PROJECTED PEAK', narrative: 'Direct crossing of Kolkata-Howrah urban corridor', status: 'pending' }
+          { time: '14:10 \u2022 FORMED', narrative: 'Initiated in Midnapore sector (38 dBZ)', status: 'done' },
+          { time: '14:18 \u2022 DEVELOPING', narrative: 'Reflectivity surge (+10 dBZ in 8 min)', status: 'done' },
+          { time: '14:26 \u2022 LIGHTNING ACCELERATION', narrative: 'Discharge rate spiked to 38 strokes/min', status: 'done' },
+          { time: '14:34 \u2022 INTENSIFYING (NOW)', narrative: 'Severe hail core with overshooting convective top', status: 'active-now' },
+          { time: '14:50 \u2022 PROJECTED PEAK', narrative: 'Direct crossing of Kolkata-Howrah urban corridor', status: 'pending' }
         ]
       },
       '018': {
@@ -1213,10 +1229,10 @@
           [23.22, 87.85], [23.26, 87.91], [23.25, 87.89]
         ],
         story: [
-          { time: '13:55 • FORMED', narrative: 'Burdwan convective initiation', status: 'done' },
-          { time: '14:15 • DEVELOPING', narrative: 'Cluster consolidating eastwards', status: 'done' },
-          { time: '14:34 • ADVECTION (NOW)', narrative: 'Steady moderate precipitation band', status: 'active-now' },
-          { time: '15:10 • PASSAGE', narrative: 'Passing Ranaghat railway hub', status: 'pending' }
+          { time: '13:55 \u2022 FORMED', narrative: 'Burdwan convective initiation', status: 'done' },
+          { time: '14:15 \u2022 DEVELOPING', narrative: 'Cluster consolidating eastwards', status: 'done' },
+          { time: '14:34 \u2022 ADVECTION (NOW)', narrative: 'Steady moderate precipitation band', status: 'active-now' },
+          { time: '15:10 \u2022 PASSAGE', narrative: 'Passing Ranaghat railway hub', status: 'pending' }
         ]
       },
       '031': {
@@ -1236,10 +1252,10 @@
           [21.68, 87.10], [21.62, 87.02], [21.72, 87.18]
         ],
         story: [
-          { time: '14:00 • FORMED', narrative: 'Balasore coastal squall initiation', status: 'done' },
-          { time: '14:20 • BOWING', narrative: 'Bow echo segment developing with gust front', status: 'done' },
-          { time: '14:34 • SEVERE (NOW)', narrative: 'Approaching Digha coastal defense line', status: 'active-now' },
-          { time: '15:00 • INDUSTRIAL PASSAGE', narrative: 'Haldia port & petrochem industrial zone', status: 'pending' }
+          { time: '14:00 \u2022 FORMED', narrative: 'Balasore coastal squall initiation', status: 'done' },
+          { time: '14:20 \u2022 BOWING', narrative: 'Bow echo segment developing with gust front', status: 'done' },
+          { time: '14:34 \u2022 SEVERE (NOW)', narrative: 'Approaching Digha coastal defense line', status: 'active-now' },
+          { time: '15:00 \u2022 INDUSTRIAL PASSAGE', narrative: 'Haldia port & petrochem industrial zone', status: 'pending' }
         ]
       }
     };
@@ -1729,3 +1745,9 @@
   </script>
 </body>
 </html>
+"""
+
+with open("dashboard/index.html", "w", encoding="utf-8") as f:
+    f.write(code)
+
+print(f"Generated Revolutionary VAJRA Spatial Environment: {len(code)} bytes")

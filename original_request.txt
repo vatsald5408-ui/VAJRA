@@ -1,0 +1,119 @@
+<USER_REQUEST>
+You are redesigning the frontend of our SIH national-level project:
+
+VAJRA — Very-short-term Atmospheric Risk & Joint Analysis
+
+Project:
+AIML-based Nowcasting of Thunderstorm and Lightning using radar, satellite, lightning and atmospheric/model data.
+
+I have attached the current UI screenshot. Treat it ONLY as the functional starting point. The current UI is visually weak and looks like a generic AI-generated weather dashboard.
+
+YOUR JOB:
+Completely transform the existing frontend into a PREMIUM, MNC-GRADE, PRODUCTION-LEVEL atmospheric intelligence command center.
+
+This must feel like a product built by a world-class geospatial/weather-tech company — not a hackathon template.
+
+IMPORTANT:
+DO NOT make it look like:
+- generic AI SaaS
+- purple/blue AI dashboard
+- excessive glassmorphism
+- gradient-heavy landing page
+- generic Tailwind dashboard
+- “AI copilot” UI
+- card-grid-everything design
+- Dribbble concept with no operational usability
+
+We want a distinctive visual identity inspired by:
+high-end geospatial command centers + aviation/maritime operations + scientific visualization + premium enterprise software.
+
+The product should immediately communicate:
+OBSERVE → UNDERSTAND → PREDICT → ASSESS IMPACT → ACT
+
+==================================================
+CORE VISUAL DIRECTION
+==================================================
+
+Make the MAP the hero, not the cards.
+
+The interface should feel like an atmospheric operations console.
+
+Use:
+- deep near-black/navy atmospheric base
+- extremely subtle borders
+- restrained accent colors
+- excellent typography
+- dense but highly organized information
+- cinematic map visualization
+- strong hierarchy
+- asymmetric composition
+- subtle motion
+- beautiful micro-interactions
+- premium data visualization
+
+Avoid excessive rounded cards. Use panels only where they improve information hierarchy.
+
+Think:
+“Bloomberg Terminal meets advanced geospatial command center”
+rather than
+“AI analytic
+<truncated 6190 bytes>
+- current functionality
+
+Then redesign the frontend rather than rebuilding the project blindly.
+
+PRESERVE useful existing functionality and data structures where possible.
+
+Create reusable components.
+
+Keep the application responsive.
+
+Maintain clean component architecture.
+
+Do not introduce unnecessary dependencies if existing libraries can achieve the result.
+
+If the current map implementation can be enhanced, enhance it.
+
+If mock data exists, make it realistic and internally consistent.
+
+The UI must remain functional, not merely visually impressive.
+
+==================================================
+QUALITY BAR
+==================================================
+
+The final result should make the current screenshot look like an early prototype.
+
+I want the reaction to be:
+
+“THIS LOOKS LIKE A REAL NATIONAL WEATHER INTELLIGENCE PLATFORM.”
+
+Not:
+
+“THIS LOOKS LIKE AN AI-GENERATED DASHBOARD.”
+
+Do not settle for incremental styling.
+
+THIS IS A COMPLETE VISUAL TRANSFORMATION.
+
+Think deeply about composition, hierarchy, interaction, typography, geospatial visualization and information density before coding.
+
+Build the strongest version you can.
+
+Do not explain what you could build.
+
+BUILD IT.
+Do not stop after making the colors, cards and typography prettier.
+
+The composition itself must change.
+
+If your first implementation still visually resembles the original screenshot, consider it a failure and redesign the layout again.
+
+The map, storm visualization, temporal forecast and threat intelligence must become the visual identity of VAJRA.
+</USER_REQUEST>
+<ADDITIONAL_METADATA>
+The current local time is: 2026-09-30T18:29:42+05:30.
+</ADDITIONAL_METADATA>
+<USER_SETTINGS_CHANGE>
+The user changed setting `Model Selection` from Gemini 3.8 Flash (Medium) to Claude Sonnet 4.6 (Thinking). No need to comment on this change if the user doesn't ask about it. If reporting what model you are, please use a human readable name instead of the exact string.
+</USER_SETTINGS_CHANGE>
